@@ -1,0 +1,37 @@
+<!DOCTYPE html><html><head>
+    <meta charset="utf-8">
+    <title>Building a Website in Rust
+    </title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style type="text/tailwindcss">
+        @tailwind base;
+        @tailwind components;
+        @tailwind utilities;
+        @import url("//fonts.googleapis.com/css?family=Arvo");
+    </style>
+    <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            clifford: '#da373d',
+            palbg: '#606c38',
+            palfg: '#283618',
+            palwhite: '#fefae0',
+            palacclight: '#dda16e',
+            palaccdark: '#bc6c25'
+          },
+          fontFamily : { sans: ['Helvetica'] }      
+        }
+      }
+    }
+  </script>
+
+<link rel="preload" href="/ui-63493b43d4ad2204_bg.wasm" as="fetch" type="application/wasm" crossorigin="">
+<link rel="modulepreload" href="/ui-63493b43d4ad2204.js"></head>
+
+<body>
+
+
+
+<script type="module">import init from '/ui-63493b43d4ad2204.js';init('/ui-63493b43d4ad2204_bg.wasm');</script></body></html>
