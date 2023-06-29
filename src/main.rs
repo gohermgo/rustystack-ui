@@ -7,6 +7,16 @@ mod contexts;
 
 use contexts::{use_theme, ThemeKind, ThemeProvider};
 
+pub const CSS_BUTTON_WRAPPER: &str = r#"
+    color: white;
+    height: 50px;
+    width: 30px;
+    font-size: 20px;
+    background-color: rgb(88, 164, 255);
+    border-radius: 5px;
+    border: none;
+"#;
+
 #[styled_component]
 pub fn Inside() -> Html {
     let theme = use_theme();
@@ -21,76 +31,67 @@ pub fn Inside() -> Html {
     let switch_theme = Callback::from(move |_| theme.set(other_theme.clone()));
     html! {
         <div>
-            <button class={css!(r#"
-                color: white;
-                height: 50px;
-                width: 30px;
-                font-size: 20px;
-                background-color: rgb(88, 164, 255);
-                border-radius: 5px;
-                border: none;
-            "#)} onclick={switch_theme} id="yew-sample-button">
+            <button class={css!(CSS_BUTTON_WRAPPER)} onclick={switch_theme} id="yew-sample-button">
                 {"Switch to "}{theme_str}
             </button>
         </div>
     }
 }
 
-#[derive(Properties, PartialEq)]
-pub struct HeaderButtonProps {
-    pub content: Html,
-}
-pub const BUTTON_CSS_STRING: &str = r#"
-    display: inline-block;
-    border-style: solid;
-    border-width: 2px;
-    border-color: black;
-    border-radius: 0.5rem;
-    padding-top: 5px;
-    padding-bottom: 5px;
-    padding-right: 5px;
-    padding-left: 5px;
-    color: white;
-    font-family: Helvetica;
-    text-align: center;
-    letter-spacing: -0.025em;
-    background-color: black;
-    transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
-    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-    transition-duration: 200ms;
-    &:hover {
-        border-style: double;
-        box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-        transform: scaleX(1.1)
-    }
-}
-"#;
-#[styled_component]
-pub fn HeaderButton(props: &HeaderButtonProps) -> Html {
-    html! {
-        <a class={css!(BUTTON_CSS_STR)} id="header-button">
-            {props.content}
-        </a>
-    }
-}
+// #[derive(Properties, PartialEq)]
+// pub struct HeaderButtonProps {
+//     pub content: Html,
+// }
+// pub const BUTTON_CSS_STRING: &str = r#"
+//     display: inline-block;
+//     border-style: solid;
+//     border-width: 2px;
+//     border-color: black;
+//     border-radius: 0.5rem;
+//     padding-top: 5px;
+//     padding-bottom: 5px;
+//     padding-right: 5px;
+//     padding-left: 5px;
+//     color: white;
+//     font-family: Helvetica;
+//     text-align: center;
+//     letter-spacing: -0.025em;
+//     background-color: black;
+//     transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
+//     transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+//     transition-duration: 200ms;
+//     &:hover {
+//         border-style: double;
+//         box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+//         transform: scaleX(1.1)
+//     }
+// "#;
+// #[styled_component]
+// pub fn HeaderButton(props: &HeaderButtonProps) -> Html {
+//     html! {
+//         <a class={css!(BUTTON_CSS_STR)} id="header-button">
+//             {props.content}
+//         </a>
+//     }
+// }
 
-#[styled_component]
-pub fn List() -> Html {
-    html! {
-        <ul class={css!(r#"
-            flex: 1 1 auto;
-            align-items: center;
-            margin-right: 8px;
-        "#)} id="header-list">
-            <li class={css!(BUTTON_CSS_STR)} id="header-list-item">
-                <a href="youtube.com"> {"youtube"} </a>
-            </li>
-            <li class={css!(BUTTON_CSS_STR)} id="header-list-item">
-                <a href="google.com"> {"google"} </a>
-            </li>
-        </ul>
-    }
-}
+// #[styled_component]
+// pub fn List() -> Html {
+//     html! {
+//         <ul class={css!(r#"
+//             flex: 1 1 auto;
+//             align-items: center;
+//             margin-right: 8px;
+//         "#)} id="header-list">
+//             <li class={css!(BUTTON_CSS_STR)} id="header-list-item">
+//                 <a href="youtube.com"> {"youtube"} </a>
+//             </li>
+//             <li class={css!(BUTTON_CSS_STR)} id="header-list-item">
+//                 <a href="google.com"> {"google"} </a>
+//             </li>
+//         </ul>
+//     }
+// }
 
 #[styled_component]
 pub fn LinkComponent() -> Html {
@@ -137,6 +138,97 @@ pub fn Header() -> Html {
         </section>
     }
 }
+
+pub struct HeaderStruct {}
+
+impl HeaderStruct {
+    pub fn button_css() -> &str { 
+        r#"
+            display: inline-block;
+            border-style: solid;
+            border-width: 2px;
+            border-color: black;
+            border-radius: 0.5rem;
+            padding-top: 5px;
+            padding-bottom: 5px;
+            padding-right: 5px;
+            padding-left: 5px;
+            color: white;
+            font-family: Helvetica;
+            text-align: center;
+            letter-spacing: -0.025em;
+            background-color: black;
+            transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
+            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+            transition-duration: 200ms;
+            &:hover {
+                border-style: double;
+                box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+                transform: scaleX(1.1)
+            }
+        "#
+    }
+    pub fn button_component(content: Html) -> Html {
+        let css = Self::button_css();
+        html! {
+            <a id="header-button">
+                {content}
+            </a>
+        }
+    }
+    pub fn list_css() -> &str {
+        r#"
+            flex: 1 1 auto;
+            align-items: center;
+            margin-right: 8px;
+        "#
+    }
+    pub fn list_component() -> Html {
+        let link_css = Self::button_css();
+        let list_css = Self::list_css();
+        let div_css: &str = r#"
+            width: auto;
+        "#;
+        html! {
+            <div>
+                <ul id="header-list">
+                    <li id="header-list-item">
+                        <a href="youtube.com"> {"youtube"} </a>
+                    </li>
+                    <li id="header-list-item">
+                        <a href="google.com"> {"google"} </a>
+                    </li>
+                </ul>
+            </div>
+        }
+    }
+    pub fn logo() -> Html {
+        // let style: &str = r#"
+            
+        // "#;
+        let content: Html = html! {<h1> {"yoink"} </h1>};
+        // let div_css: &str = r#"
+        //     width: auto;
+        // "#;
+        html! {
+            <div>
+                {Self::button_component(content)}
+            </div>
+        }
+    }
+    pub fn button() -> Html {
+        let content: Html = html! {<p1> {"Some button"} </p1/>};
+        let div_css: &str = r#"
+            width: auto;
+        "#;
+        html! {
+            <div>
+                {Self::button_component(content)}
+            </div>
+        }
+    }
+}
+
 // Create main app that will load all other Components
 pub struct App {}
 
