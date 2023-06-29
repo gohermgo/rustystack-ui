@@ -1,67 +1,210 @@
+use std::ops::Div;
+use stylist::css;
+use stylist::yew::{styled_component, Global};
 use yew::prelude::*;
 
-// Create main app that will load all other Components
-pub struct App {
+mod contexts;
 
+use contexts::{use_theme, ThemeKind, ThemeProvider};
+
+#[styled_component]
+pub fn Inside() -> Html {
+    let theme = use_theme();
+    let theme_str = match theme.kind() {
+        ThemeKind::Dark => "Dark Theme",
+        ThemeKind::Light => "Light Theme",
+    };
+    let other_theme = match theme.kind() {
+        ThemeKind::Dark => ThemeKind::Light,
+        ThemeKind::Light => ThemeKind::Dark,
+    };
+    let switch_theme = Callback::from(move |_| theme.set(other_theme.clone()));
+    html! {
+        <div>
+            <button class={css!(r#"
+                color: white;
+                height: 50px;
+                width: 30px;
+                font-size: 20px;
+                background-color: rgb(88, 164, 255);
+                border-radius: 5px;
+                border: none;
+            "#)} onclick={switch_theme} id="yew-sample-button">
+                {"Switch to "}{theme_str}
+            </button>
+        </div>
+    }
 }
+
+#[derive(Properties, PartialEq)]
+pub struct HeaderButtonProps {
+    pub content: Html,
+}
+pub const BUTTON_CSS_STRING: &str = r#"
+    display: inline-block;
+    border-style: solid;
+    border-width: 2px;
+    border-color: black;
+    border-radius: 0.5rem;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    padding-right: 5px;
+    padding-left: 5px;
+    color: white;
+    font-family: Helvetica;
+    text-align: center;
+    letter-spacing: -0.025em;
+    background-color: black;
+    transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 200ms;
+    &:hover {
+        border-style: double;
+        box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+        transform: scaleX(1.1)
+    }
+}
+"#;
+#[styled_component]
+pub fn HeaderButton(props: &HeaderButtonProps) -> Html {
+    html! {
+        <a class={css!(BUTTON_CSS_STR)} id="header-button">
+            {props.content}
+        </a>
+    }
+}
+
+#[styled_component]
+pub fn List() -> Html {
+    html! {
+        <ul class={css!(r#"
+            flex: 1 1 auto;
+            align-items: center;
+            margin-right: 8px;
+        "#)} id="header-list">
+            <li class={css!(BUTTON_CSS_STR)} id="header-list-item">
+                <a href="youtube.com"> {"youtube"} </a>
+            </li>
+            <li class={css!(BUTTON_CSS_STR)} id="header-list-item">
+                <a href="google.com"> {"google"} </a>
+            </li>
+        </ul>
+    }
+}
+
+#[styled_component]
+pub fn LinkComponent() -> Html {
+    let button_component: Html = html! {<p1> {"Some button"} </p1/>};
+    html! {
+        <div class={css!(r#"
+            flex: 1 1 auto;
+            flex-wrap: wrap;
+            align-items: center;   
+        "#)}>
+            <div class={css!(r#"
+                display: inline-block;
+                max-width: 28rem;
+            "#)}>
+                <div class={css!(r#"
+                    width: auto;
+                "#)}>
+                    <List/>
+                </div>
+                <div class={css!(r#"
+                    width: auto;
+                "#)}>
+                    <HeaderButton content={button_component} />
+                </div>
+            </div>
+        </div>
+    }
+}
+
+#[styled_component]
+pub fn Header() -> Html {
+    let logo_component: Html = html! {<h1> {"yoink"} </h1>};
+    html! {
+
+        <section class="bg-palbg">
+            <div class="container px-4 mx-auto">
+                <div class="flex items-center justify-between py-10">
+                    {logo_component}
+                    <div class={css!(r#"
+                        width: auto;
+                    "#)}> <LinkComponent /> </div>
+                </div>
+            </div>
+        </section>
+    }
+}
+// Create main app that will load all other Components
+pub struct App {}
 
 impl App {
     fn view_header(&self, _ctx: &Context<Self>) -> Html {
-        fn header_button(button_content: Html) -> Html {
-            html! {
-                <div class="inline-block max-w-md">
-                    <a class="inline-block border-solid border-2 border-palfg px-5 py-3 text-palwhite font-semibold text-center tracking-tight bg-palacclight rounded-lg focus:ring-4 focus:ring-pal2 transition duration-200 ease-in-out hover:bg-palaccdark hover:border-pal2 hover:border-double hover:shadow-lg dark:hover:shadow-black/30 hover:scale-110 hover:underline">
-                        {button_content}
-                    </a>
-                </div>
-            }
-        }
-	fn small_header_button(button_content: Html) -> Html {
-            html! {
-                <li class="px-3 py-1 border-solid border-2 border-palfg mr-10 font-medium text-md text-palwhite tracking-tight bg-palbg rounded-lg focus:ring-4 focus:ring-pal2 transition duration-200 ease-in-out hover:underline hover:bg-palaccdark hover:border-pal2 hover:border-double hover:shadow-lg dark:hover:shadow-black/30 hover:scale-105">
-                    {button_content}
-                </li>
-            }
-        }
-        let title_component: Html = header_button(html! {
-            <h1 class="text-4xl font-arvo px-5"> {"yoink"} </h1>
-        });
-        let list_component: Html = html! {
-            <ul class="xl:flex items-center mr-8">
-                {
-                    small_header_button(html! {
-                        <a href="https://www.youtube.com"> {"youtube"} </a>
-                    })
-                }
-                {
-                    small_header_button(html! {
-                        <a href="https://www.google.com"> {"google"} </a>
-                    })
-                }
-            </ul>
-        };
-        let button_component: Html = header_button(html! {
-            <p> {"some button"} </p>
-        });
-        let link_component: Html = html! {
-            <div class="flex flex-wrap items-center">
-                <div class="w-auto hidden lg:block"> {list_component} </div>
-                <div class="w-auto hidden lg:block"> {button_component} </div>
-           </div>
-        };
+        // fn header_button(button_content: Html) -> Html {
+        //     html! {
+        //         <div class="inline-block max-w-md">
+        //             <a class="inline-block border-solid border-2 border-palfg px-5 py-3 text-palwhite font-semibold text-center tracking-tight bg-palacclight rounded-lg focus:ring-4 focus:ring-pal2 transition duration-200 ease-in-out hover:bg-palaccdark hover:border-pal2 hover:border-double hover:shadow-lg dark:hover:shadow-black/30 hover:scale-110 hover:underline">
+        //                 {button_content}
+        //             </a>
+        //         </div>
+        //     }
+        // }
+        // fn small_header_button(button_content: Html) -> Html {
+        //     html! {
+        //         <li class="px-3 py-1 border-solid border-2 border-palfg mr-10 font-medium text-md text-palwhite tracking-tight bg-palbg rounded-lg focus:ring-4 focus:ring-pal2 transition duration-200 ease-in-out hover:underline hover:bg-palaccdark hover:border-pal2 hover:border-double hover:shadow-lg dark:hover:shadow-black/30 hover:scale-105">
+        //             {button_content}
+        //         </li>
+        //     }
+        // }
+        // let title_component: Html = header_button(html! {
+        //     <h1 class="text-4xl font-arvo px-5"> {"yoink"} </h1>
+        // });
+        // let list_component: Html = html! {
+        //     <ul class="xl:flex items-center mr-8">
+        //         {
+        //             small_header_button(html! {
+        //                 <a href="https://www.youtube.com"> {"youtube"} </a>
+        //             })
+        //         }
+        //         {
+        //             small_header_button(html! {
+        //                 <a href="https://www.google.com"> {"google"} </a>
+        //             })
+        //         }
+        //     </ul>
+        // };
+        // // let button_component: Html = html! {<p1> {"Some button"} </p1/>};
+        // let link_component: Html = html! {
+        //     <div class="flex flex-wrap items-center">
+        //         <div class="w-auto hidden lg:block"> {list_component} </div>
+        //         <div class="w-auto hidden lg:block"> <HeaderButton payload={button_component}/> </div>
+        //    </div>
+        // };
         html! {
             <section class="bg-palbg">
-                <div class="container px-4 mx-auto">
-                    <div class="flex items-center justify-between py-10">
-                        {title_component}
-                        <div class="w-auto"> {link_component} </div>
+                // <div class="container px-4 mx-auto">
+                <div class={css!(r#"
+                    padding-right: 4px;
+                    padding-left: 4px;    
+                "#)}>
+                    // <div class="flex items-center justify-between py-10">
+                    <div class={css!(r#"
+                        padding-top: 10px;
+                        padding-bottom: 10px;
+                        align-items: center;
+                        flex: auto;
+                        justify-content: space-between;
+                    "#)}>
+                        <Header />
                     </div>
                 </div>
             </section>
         }
     }
     fn view_footer(&self, _ctx: &Context<Self>) -> Html {
-	fn wrap_button(button_content: Html, button_label: String) -> Html {
+        fn wrap_button(button_content: Html, button_label: String) -> Html {
             html! {
                 <button type="button" class="inline-flex flex-col items-center justify-center px-5 hover:bg-palfg group">
                     <svg class="w-6 h-6 mb-1 text-palwhite dark:text-gray-400 group-hover:text-palacclight" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -71,7 +214,7 @@ impl App {
                 </button>
             }
         }
-	html! {
+        html! {
             <div class="fixed bottom-0 left-0 z-50 w-full h-16 bg-palbg border-t border-palfg">
                 <div class="grid h-full max-w-lg grid-cols-4 mx-auto font-medium">
                     {
@@ -104,9 +247,7 @@ impl App {
 }
 
 // Message enum that is used for managing the life cycle of Components
-pub enum Msg {
-
-}
+pub enum Msg {}
 
 // Impl of Component interface
 impl Component for App {
@@ -114,8 +255,7 @@ impl Component for App {
     type Properties = ();
     // Create a new App
     fn create(_ctx: &Context<Self>) -> Self {
-        App {
-        }
+        App {}
     }
     fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
         false
@@ -126,14 +266,14 @@ impl Component for App {
             <div>
                 {self.view_header(&ctx)}
                 <h1> {"Hello world"} </h1>
-                {self.view_footer(&ctx)}
+                // {self.view_footer(&ctx)}
             </div>
         }
     }
 }
 
 //#[function_component]
-//fn header_component() -> Html { 
+//fn header_component() -> Html {
 //    html! {
 //        <>
 //            <h1> {"HEADER TITLE"} </h1>
