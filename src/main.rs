@@ -23,10 +23,20 @@ fn header(cx: Scope<()>) -> Element {
     cx.render(rsx! {
         div {
             class: "ui secondary menu",
-            a {
-                href: "http://yoink.ltd",
-                class: "header item",
-                "yoink"
+            // a {
+            //     href: "http://yoink.ltd",
+            //     class: "header item",
+            //     "yoink"
+            // }
+            div {
+                class: "item",
+                a {
+                    href: "http://www.yoink.ltd",
+                    class: "ui jiggle transition header",
+                    margin_left: "0.25em",
+                    font_size: "64px",
+                    "yoink",
+                }
             }
             a {
                 href: "https://www.youtube.com",
@@ -116,7 +126,7 @@ impl Card {
             }
         })
     }
-    pub fn add(cx: Scope <()>, card: Card) -> Element {
+    pub fn add(cx: Scope<()>, card: Card) -> Element {
         cx.render(rsx! {
             div {
                 class: "ui card",
@@ -142,14 +152,10 @@ impl Card {
 fn cards(cx: Scope<()>) -> Element {
     let placeholder_source = String::from("https://placehold.co/400");
     cx.render(rsx! {
-        h1 {
-            margin_left: "0.5em",
-            "earlier projects"
-        }
         div {
             // An outer div to keep the inner cards from touching the "edges"
-            padding_left: "1em",
-            padding_right: "1em",
+            // padding_left: "1em",
+            // padding_right: "1em",
             div {
                 class: "ui four cards",
                 Card::add(cx, Card {
@@ -181,86 +187,169 @@ fn cards(cx: Scope<()>) -> Element {
     })
 }
 
-fn list_item(cx: Scope<()>, item: (String, String)) -> Element {
+fn earlier_work(cx: Scope<()>) -> Element {
     cx.render(rsx! {
         div {
-            class: "item",
+            h1 {
+                class: "ui dividing header",
+                margin_left: "0.5em",
+                "earlier projects"
+            }
             div {
-                class: "content",
+                class: "ui grid",
                 div {
-                    class: "header",
-                    "{item.0}"
+                    class: "two wide column",
+                    div {
+                        class: "ui grid",
+                        margin_left: "0.5em",
+                        margin_right: "0.5em",
+                        div {
+                            class: "row",
+                            h3 {
+                                class: "ui header",
+                                "categories"
+                            }
+                        }
+                        div {
+                            class: "row",
+                            div {
+                                class: "ui link list",
+                                div {
+                                    class: "active item",
+                                    "all"
+                                }
+                                a {
+                                    class: "item",
+                                    "some category"
+                                }
+                                a {
+                                    class: "item",
+                                    "other category"
+                                }
+                            }
+                        }
+                    }
                 }
-                "{item.1}"
+                div {
+                    class: "fourteen wide column",
+                    cards(cx)
+                }
             }
         }
     })
 }
 
+#[derive(Clone)]
+struct ListItem {
+    title: String,
+    description: String,
+}
 
-fn inverted_list(cx: Scope<()>, items: Vec<(String, String)>) -> Element {
+impl ListItem {
+    pub fn add(cx: Scope<()>, list_item: ListItem) -> Element {
+        cx.render(rsx! {
+            div {
+                class: "item",
+                div {
+                    class: "content",
+                    div {
+                        class: "header",
+                        "{list_item.title}"
+                    }
+                    "{list_item.description}"
+                }
+            }
+        })
+    }
+}
+
+fn inverted_list(cx: Scope<()>, items: Vec<ListItem>) -> Element {
     cx.render(rsx! {
         div {
             class: "ui inverted segment",
             div {
                 class: "ui inverted relaxed divided list",
-                items.iter().map(|item| list_item(cx, item.clone()))
+                items.iter().map(|item| ListItem::add(cx, item.clone()))
+            }
+        }
+    })
+}
+
+fn introduction(cx: Scope<()>) -> Element {
+    cx.render(rsx! {
+        div {
+            // padding_left: "1em",
+            // padding_right: "1em",
+            class: "ui grid",
+            div {
+                class: "twelve wide column",
+                img {
+                    class: "ui image rounded",
+                    src: "https://placehold.co/1920x1080"
+                }
+            }
+            div {
+                class: "four wide column",
+                align_content: "left",
+                h1 { class: "title", "eiffel tower" }
+                p { font_size: "16px", "paragraph text lorem ipsum suck my nuts, woow its the fucking eiffel tower, oh my goooood i cant believe it, have you ever seen such an eiffel tower? its like tall and shit" }
+                // "paragraph text lorem ipsum suck my nuts, woow its the fucking eiffel tower, oh my goooood i cant believe it, have you ever seen such an eiffel tower? its like tall and shit"                
+            }
+        }
+    })
+}
+
+fn app_main_body(cx: Scope<()>) -> Element {
+    cx.render(rsx! {
+        div {
+            class: "ui grid",
+            div {
+                class: "row",
+                introduction(cx),
+            }
+            div {
+                class: "row",
+                earlier_work(cx)
             }
         }
     })
 }
 
 fn app(cx: Scope<()>) -> Element {
+    let placeholder_list: Vec<ListItem> = (0..20)
+        .map(|x| ListItem {
+            title: format!("title {}", x + 1),
+            description: format!("description of element {}", x + 1),
+        })
+        .collect();
     cx.render(rsx! {
         div {
             font: "14px 'Helvetica Neue', Helvetica, Arial, sans-serif",
             width: "100%",
             header(cx),
             div {
-                margin: "0.5em",
+                // margin: "0.5em",
                 class: "ui grid",
                 div {
-                    class: "eleven wide column",
-                    img {
-                        class: "ui image rounded",
-                        src: "https://placehold.co/1920x1080"
+                    padding: "0px",
+                    class: "fourteen wide column",
+                    div {
+                        margin: "1em",
+                        padding_left: "2em",
+                        padding_right: "2em",
+                        div {
+                            app_main_body(cx)
+                        }
                     }
                 }
                 div {
-                    class: "three wide column",
-                    align_content: "left",
-                    h1 { class: "title", "eiffel tower" }
-                    p { font_size: "16px", "paragraph text lorem ipsum suck my nuts, woow its the fucking eiffel tower, oh my goooood i cant believe it, have you ever seen such an eiffel tower? its like tall and shit" }
-                    // "paragraph text lorem ipsum suck my nuts, woow its the fucking eiffel tower, oh my goooood i cant believe it, have you ever seen such an eiffel tower? its like tall and shit"                
-                }
-                // div {
-                //     class: "seven wide column",
-                //     img {
-                //         class: "ui image rounded",
-                //         src: "https://placehold.co/800x500"
-                //     }
-                // }
-                div {
                     class: "two wide column",
+                    padding: "0px",
                     div {
-                        // class: "ui inverted segment",
-                        // div {
-                        //     class: "item",
-                        //     div {
-                        //         class: "content",
-                        //         div {
-                        //             class: "header",
-                        //             "item header"
-                        //         }
-                        //         "item info"
-                        //     }
-                            
-                        // }
-                        inverted_list(cx, (0..11).map(|x| (format!("title {}", x + 1), format!("description describing thing mentioned in title {}", x + 1).to_string())).collect())
+                        inverted_list(cx, placeholder_list)
                     }
                 }
             }
-            cards(cx),
         }
     })
 }
