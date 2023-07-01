@@ -62,80 +62,81 @@ fn header(cx: Scope<()>) -> Element {
     })
 }
 
-fn card_image(cx: Scope<()>, image_source: String) -> Element {
-    cx.render(rsx! {
-        div {
-            class: "image dimmable",
+struct Card {
+    title: String,
+    description: String,
+    git: String,
+    imsrc: String,
+}
+
+impl Card {
+    fn image(cx: Scope<()>, imsrc: String) -> Element {
+        cx.render(rsx! {
             div {
-                class: "ui blurring inverted dimmer transition hidden",
+                class: "image dimmable",
                 div {
-                    class: "content",
+                    class: "ui blurring inverted dimmer transition hidden",
                     div {
-                        class: "center",
+                        class: "content",
                         div {
-                            class: "ui teal button",
-                            "add friend"
+                            class: "center",
+                            div {
+                                class: "ui teal button",
+                                "add friend"
+                            }
                         }
                     }
                 }
-            }
-            img {
-                alt: "image broken",
-                src: "{image_source}"
-            }
-        }
-    })
-}
-
-fn card_content(cx: Scope<()>, card_title: String, card_description: String) -> Element {
-    cx.render(rsx! {
-        div {
-            class: "content",
-            div {
-                class: "header",
-                "{card_title}"
-            }
-            div {
-                class: "meta",
-                a {
-                    class: "group",
-                    "meta"
+                img {
+                    alt: "card image broken",
+                    src: "{imsrc}"
                 }
             }
+        })
+    }
+    fn content(cx: Scope<()>, title: String, description: String) -> Element {
+        cx.render(rsx! {
             div {
-                class: "description",
-                "{card_description}"
-            }
-        }
-    })
-}
-
-fn card(
-    cx: Scope<()>,
-    image_source: String,
-    card_git: String,
-    card_title: String,
-    card_description: String,
-) -> Element {
-    cx.render(rsx! {
-        div {
-            class: "ui card",
-            card_image(cx, image_source),
-            card_content(cx, card_title, card_description),
-            div {
-                class: "extra content",
-                a {
-                    href: "{card_git}",
-                    class: "right floated created",
-                    "git"
+                class: "content",
+                div {
+                    class: "header",
+                    "{title}"
                 }
-                a {
-                    class: "friends",
-                    "arbitrary"
+                div {
+                    class: "meta",
+                    a {
+                        class: "group",
+                        "meta"
+                    }
+                }
+                div {
+                    class: "description",
+                    "{description}"
                 }
             }
-        }
-    })
+        })
+    }
+    pub fn add(cx: Scope <()>, card: Card) -> Element {
+        cx.render(rsx! {
+            div {
+                class: "ui card",
+                Self::image(cx, card.imsrc.clone()),
+                Self::content(cx, card.title.clone(), card.description.clone()),
+                div {
+                    class: "extra content",
+                    a {
+                        href: "{card.git.clone()}",
+                        class: "right floated created",
+                        "git"
+                    }
+                    a {
+                        class: "friends",
+                        "arbitrary"
+                    }
+                }
+            }
+        })
+    }
 }
 
 fn cards(cx: Scope<()>) -> Element {
@@ -151,10 +152,59 @@ fn cards(cx: Scope<()>) -> Element {
             padding_right: "1em",
             div {
                 class: "ui four cards",
-                card(cx, placeholder_source.clone(), String::from("https://github.com/gohermgo/rustystack"), String::from("rustystack"), String::from("A project consisting of a website, whose stack is entirely in rust (this was hardcoded into that stack)")),
-                card(cx, placeholder_source.clone(), String::from("https://github.com/gohermgo"), String::from("project 1"), String::from("empty description")),
-                card(cx, placeholder_source.clone(), String::from("https://github.com/gohermgo"), String::from("project 2"), String::from("empty description")),
-                card(cx, placeholder_source.clone(), String::from("https://github.com/gohermgo"), String::from("project 3"), String::from("empty description"))
+                Card::add(cx, Card {
+                    title: String::from("rustystack"),
+                    description: String::from("A project consisting of a website, whose stack is entirely in rust (this was hardcoded into that stack)"),
+                    git: String::from("https://github.com/gohermgo/rustystack"),
+                    imsrc: placeholder_source.clone()
+                })
+                Card::add(cx, Card {
+                    title: String::from("project"),
+                    description: String::from("description"),
+                    git: String::from("localhost:8080"),
+                    imsrc: placeholder_source.clone()
+                })
+                Card::add(cx, Card {
+                    title: String::from("project"),
+                    description: String::from("description"),
+                    git: String::from("localhost:8080"),
+                    imsrc: placeholder_source.clone()
+                })
+                Card::add(cx, Card {
+                    title: String::from("project"),
+                    description: String::from("description"),
+                    git: String::from("localhost:8080"),
+                    imsrc: placeholder_source.clone()
+                })
+            }
+        }
+    })
+}
+
+fn list_item(cx: Scope<()>, item: (String, String)) -> Element {
+    cx.render(rsx! {
+        div {
+            class: "item",
+            div {
+                class: "content",
+                div {
+                    class: "header",
+                    "{item.0}"
+                }
+                "{item.1}"
+            }
+        }
+    })
+}
+
+
+fn inverted_list(cx: Scope<()>, items: Vec<(String, String)>) -> Element {
+    cx.render(rsx! {
+        div {
+            class: "ui inverted segment",
+            div {
+                class: "ui inverted relaxed divided list",
+                items.iter().map(|item| list_item(cx, item.clone()))
             }
         }
     })
@@ -170,16 +220,44 @@ fn app(cx: Scope<()>) -> Element {
                 margin: "0.5em",
                 class: "ui grid",
                 div {
-                    class: "nine wide column",
+                    class: "eleven wide column",
                     img {
                         class: "ui image rounded",
-                        src: "https://images.pexels.com/photos/2260800/pexels-photo-2260800.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+                        src: "https://placehold.co/1920x1080"
                     }
                 }
                 div {
-                    class: "seven wide column",
-                    h1 { "Paragraph header" }
-                    p { "paragraph text lorem ipsum suck my nuts" }
+                    class: "three wide column",
+                    align_content: "left",
+                    h1 { class: "title", "eiffel tower" }
+                    p { font_size: "16px", "paragraph text lorem ipsum suck my nuts, woow its the fucking eiffel tower, oh my goooood i cant believe it, have you ever seen such an eiffel tower? its like tall and shit" }
+                    // "paragraph text lorem ipsum suck my nuts, woow its the fucking eiffel tower, oh my goooood i cant believe it, have you ever seen such an eiffel tower? its like tall and shit"                
+                }
+                // div {
+                //     class: "seven wide column",
+                //     img {
+                //         class: "ui image rounded",
+                //         src: "https://placehold.co/800x500"
+                //     }
+                // }
+                div {
+                    class: "two wide column",
+                    div {
+                        // class: "ui inverted segment",
+                        // div {
+                        //     class: "item",
+                        //     div {
+                        //         class: "content",
+                        //         div {
+                        //             class: "header",
+                        //             "item header"
+                        //         }
+                        //         "item info"
+                        //     }
+                            
+                        // }
+                        inverted_list(cx, (0..11).map(|x| (format!("title {}", x + 1), format!("description describing thing mentioned in title {}", x + 1).to_string())).collect())
+                    }
                 }
             }
             cards(cx),
