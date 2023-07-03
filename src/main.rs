@@ -34,22 +34,29 @@ fn header(cx: Scope<()>) -> Element {
                     href: "http://www.yoink.ltd",
                     class: "ui jiggle transition header",
                     margin_left: "0.25em",
-                    font_size: "64px",
+                    font_size: "34px",
+                    color: "white",
                     "yoink",
                 }
             }
             a {
                 href: "https://www.youtube.com",
                 class: "item",
+                font_size: "20px",
+                color: "white",
                 "youtube"
             }
             a {
                 href: "https://www.google.com",
                 class: "item",
+                font_size: "20px",
+                color: "white",
                 "google"
             }
             a {
                 class: "item",
+                font_size: "20px",
+                color: "white",
                 "link"
             }
             div {
@@ -65,9 +72,19 @@ fn header(cx: Scope<()>) -> Element {
                 }
                 a {
                     class: "item",
+                    color: "white",
                     "link"
                 }
             }
+        }
+    })
+}
+
+fn inverted_header(cx: Scope<()>) -> Element {
+    cx.render(rsx! {
+        div {
+            class: "ui inverted segment",
+            header(cx)
         }
     })
 }
