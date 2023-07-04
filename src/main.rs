@@ -1,4 +1,8 @@
 #![allow(non_snake_case)]
+// use core::num::fmt::Formatted;
+
+use std::fmt::Display;
+
 use dioxus::prelude::*;
 
 fn main() {
@@ -89,30 +93,89 @@ fn inverted_header(cx: Scope<()>) -> Element {
     })
 }
 
-#[derive(Clone, PartialEq)]
+trait Url {
+    fn get_url(&self) -> String;
+}
+
+trait RenderBlock<P> {
+    fn render(cx: Scope<P>) -> Element;
+}
+
+#[derive(Clone, Default, PartialEq, Props)]
 struct GitLink {
     user: String,
     repo: String,
 }
 
-impl Default for GitLink {
-    fn default() -> Self {
-        Self {
-            ..Default::default()
-        }
-    }
-}
+// impl Copy for GitLink {}
 
-impl GitLink {
-    fn url(&self) -> String {
-        format!("https://www.github.com/{}/{}.git", self.user, self.repo)
-    }
-}
+// impl Clone for GitLink {
+//     fn clone(&self) -> Self {
+//         *self
+//     }
+// }
 
-impl From<GitLink> for String {
+// impl PartialEq for GitLink {
+//     fn eq(&self, other: &Self) -> bool {
+//         self.user.eq(&other.user) && self.repo.eq(&other.repo) 
+//     }
+//     fn ne(&self, other: &Self) -> bool {
+//         self.user.ne(&other.user) || self.repo.ne(&other.repo)
+//     }
+// }
+
+// impl Default for GitLink {
+//     fn default() -> Self {
+//         Self {
+//             ..Default::default()
+//         }
+//     }
+// }
+
+impl std::convert::From<GitLink> for String {
     fn from(value: GitLink) -> Self {
         format!("https://www.github.com/{}/{}.git", value.user, value.repo)
     }
+}
+
+// impl std::convert::From<&GitLink> for String {
+//     fn from(value: &GitLink) -> Self {
+//         format!("https://www.github.com/{}/{}.git", *value.user, *value.repo)
+//     }
+// }
+
+impl Url for GitLink {
+    fn get_url(&self) -> String {
+        String::from(*self)
+    }
+}
+
+impl std::fmt::Display for GitLink {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", String::from(*self))
+    }
+}
+
+// impl RenderBlock<GitLink> for GitLink {
+//     fn render(cx: Scope<) -> Element {
+//         render!(rsx ! {
+//             a {
+//                 href: "{self.get_url()}",
+//                 class: "right floated created",
+//                 "git"
+//             }
+//         })
+//     }
+// }
+
+fn git_link(cx: Scope<GitLink>) -> Element {
+    render!(rsx ! {
+        a {
+            href: "{cx.props.get_url()}",
+            class: "right floated created",
+            "git"
+        }
+    })
 }
 
 #[derive(Clone, PartialEq)]
@@ -123,40 +186,13 @@ enum CardCategory {
 }
 
 #[derive(Clone, PartialEq, Props)]
-struct ProjectProps {
-    title: String,
-    category: Option<CardCategory>,
-    description: String,
-    git: Option<GitLink>,
-    imsrc: String,
+struct Image {
+    #[props(default = String::from("https://www.placehold.co/400"))]
+    source_url: String
 }
 
-// impl Clone for Card {
-//     fn clone(&self) -> Self {
-//         Self {
-//             title: self.title.clone(),
-//             category: self.category.clone(),
-//             description: self.description.clone(),
-//             git: self.git.clone(),
-//             imsrc: self.imsrc.clone(),
-//         }
-//     }
-// }
-
-impl Default for ProjectProps {
-    fn default() -> Self {
-        Self {
-            title: String::from("empty project"),
-            category: None,
-            description: String::from("empty description"),
-            git: None,
-            imsrc: String::from("https://www.placehold.co/400"),
-        }
-    }
-}
-
-fn project_add_button(cx: Scope<ProjectProps>) -> Element {
-    render!(rsx! {
+fn image_interaction_button(cx: Scope) -> Element {
+    render!(rsx ! {
         div {
             class: "ui blurring inverted dimmer transition hidden",
             div {
@@ -172,20 +208,30 @@ fn project_add_button(cx: Scope<ProjectProps>) -> Element {
         }
     })
 }
-fn project_image(cx: Scope<ProjectProps>) -> Element {
-    render!(rsx! {
+
+fn project_image(cx: Scope<Image>) -> Element {
+    render!(rsx ! {
         div {
             class: "image dimmable",
-            project_add_button(cx),
+            image_interaction_button {},
             img {
                 alt: "card image broken",
-                src: "{cx.props.imsrc}"
+                src: "{cx.props.source_url}"
             }
         }
     })
 }
-fn project_content(cx: Scope<ProjectProps>) -> Element {
-    render!(rsx! {
+
+#[derive(Clone, PartialEq, Props)]
+struct ContentProps {
+    #[props(default = String::from("blank title"), into)]
+    title: String,
+    #[props(default = String::from("blank description"), into)]
+    content: String
+}
+
+fn project_content(cx: Scope<ContentProps>) -> Element {
+    render!(rsx ! {
         div {
             class: "content",
             div {
@@ -206,116 +252,164 @@ fn project_content(cx: Scope<ProjectProps>) -> Element {
         }
     })
 }
+
+#[derive(Clone, PartialEq, Props)]
+struct ProjectProps {
+    content: ContentProps,
+    #[props(default = None)]
+    category: Option<CardCategory>,
+    #[props(default = None)]
+    git: Option<GitLink>,
+    image: Image,
+}
+
+
 fn project_extra_content(cx: Scope<ProjectProps>) -> Element {
-    let content = match cx.props.git {
+    match cx.props.git {
         Some(gitlink) => render!(rsx! {
-            a {
-                href: "{gitlink.url()}",
-                class: "right floated created",
-                "git"
-            }
-            a {
-                class: "friends",
-                "arbitrary"
+            div {
+                class: "extra content",
+                git_link {
+                    user: gitlink.user,
+                    repo: gitlink.repo,
+                },
             }
         }),
         None => render!(rsx! {
-            a {
-                class: "friends",
-                "arbitrary"
+            div {
+                class: "extra content",
+                a {
+                    class: "friends",
+                    "arbitrary"
+                }
             }
         }),
-    };
-    render!(rsx! {
-        div {
-            class: "extra content",
-            content
-        }
-    })
+    }
 }
 
 fn render_project_card(cx: Scope<ProjectProps>) -> Element {
     render!(rsx! {
         div {
             class: "ui card",
-            project_image(cx),
-            project_content(cx),
-            project_extra_content(cx)
+            project_image {
+                cx.props.image
+            },
+            project_content {
+                cx.props.content
+            },
+            project_extra_content {
+                cx.props
+            }
         }
     })
 }
 
-impl ProjectProps {
-    // fn new(
-    //     title: String,
-    //     category: Option<CardCategory>,
-    //     description: String,
-    //     git: Option<GitLink>,
-    //     imsrc: Option<String>,
-    // ) -> Self {
-    //     match imsrc {
-    //         Some(img_url) => Self {
-    //             title,
-    //             category,
-    //             description,
-    //             git,
-    //             imsrc: img_url,
-    //         },
-    //         None => Self {
-    //             title,
-    //             category,
-    //             description,
-    //             git,
-    //             ..Default::default()
-    //         },
-    //     }
-    // }
-    // fn set_image_source(&mut self, imsrc: String) -> &Self {
-    //     self.imsrc = imsrc;
-    //     self
-    // }
-    pub fn render(&self, cx: Scope<()>) -> Element {
-        render!(rsx! {
-            div {
-                class: "ui card",
-                self.image(cx),
-                self.content(cx),
-                self.extra_content(cx)
-            }
-        })
-    }
+// impl PartialEq for Scope<ProjectProps> {
+//     fn eq(&self, other: &Self) -> bool {
+//         self.props == other.props
+//     }
+// }
+
+#[derive(Props)]
+struct CardList {
+    #[props(default = None)]
+    pub active_category: Option<CardCategory>,
+    #[props(default = vec![])]
+    pub project_props: Vec<Scope<'static, ProjectProps>>,
 }
 
-struct CardList {
-    active_category: Option<CardCategory>,
-    pub data: Vec<ProjectProps>,
+impl PartialEq for CardList {
+    fn eq(&self, other: &Self) -> bool {
+        match self.project_props.len() == other.project_props.len() {
+            true => self
+                .project_props
+                .iter()
+                .enumerate()
+                .all(|(idx, val)| other.project_props[idx].props.eq(val.props)),
+            false => false,
+        }
+    }
+    fn ne(&self, other: &Self) -> bool {
+        match self.project_props.len() == other.project_props.len() {
+            true => self
+                .project_props
+                .iter()
+                .enumerate()
+                .any(|(idx, val)| other.project_props[idx].props.ne(val.props)),
+            false => true,
+        }
+    }
 }
 
 impl Clone for CardList {
     fn clone(&self) -> Self {
-        let mut clone_data = Vec::with_capacity(self.data.len());
-        clone_data.clone_from_slice(&self.data);
+        let mut clone_data = Vec::with_capacity(self.project_props.len());
+        clone_data.clone_from_slice(&self.project_props);
         Self {
             active_category: self.active_category,
-            data: clone_data,
+            project_props: clone_data,
         }
     }
 }
 
-impl Default for CardList {
-    fn default() -> Self {
-        Self {
-            active_category: None,
-            data: vec![],
-        }
+trait Renderable {
+    fn render_function(&self) -> F
+    where
+        F: std::convert::Into<Element>;
+    fn render(&self, cx: Scope<()>) -> Element;
+}
+
+impl RenderBlock for T {
+    fn render(&self) -> F where F: std::convert::Into<Element>,
+    {
+        |
+    }
+|} 
+impl RenderBlock for CardList {
+    fn render_function(&self) -> F
+    where
+        F: std::convert::Into<Element>,
+    {
+    }
+    fn render(&self, cx: Scope<()>) -> Element {
+        render!(rsx! {
+            self.project_props
+        })
     }
 }
 
+#[derive(PartialEq, Props)]
+struct ProjectFilterProps {}
+
+fn get_active_cards(cx: Scope<(CardList, CardCategory)>) -> Vec<CardList> {
+    cx.props
+        .0
+        .project_props
+        .into_iter()
+        .filter_map(|f| match Some(cx.props.1) == f.props.category {
+            true => Some(cx.props.0),
+            _ => None,
+        })
+        .collect()
+}
+
+fn render_active_cards(cx: Scope<CardList>) -> Element {
+    render!(rsx! {
+        let active_cards = get_active_cards(cx);
+
+        match cx.props.active_category {
+            Some(category) => cx.props.project_props.data.for_each(|prop| {
+                println!("hello")
+            }),
+            None => cx.props.project_props.iter().map(|x| render_project_card(dioxus::prelude::Scope::from(x)))
+        }
+    })
+}
 impl CardList {
     fn get_active(&mut self, cx: Scope<()>) -> Vec<ProjectProps> {
         match self.active_category {
             Some(active_category) => self
-                .data
+                .project_props
                 .into_iter()
                 .filter(|card| {
                     if let Some(category) = card.category {
@@ -325,7 +419,7 @@ impl CardList {
                     }
                 })
                 .collect(),
-            None => self.data,
+            None => self.project_props,
         }
     }
     fn set_active_category(&mut self, cx: Scope<()>, category: CardCategory) {
@@ -335,7 +429,7 @@ impl CardList {
         self.active_category = None
     }
     fn push(&mut self, cx: Scope<()>, card: ProjectProps) {
-        self.data.push(card)
+        self.project_props.push(card)
     }
     pub fn render(&self, cx: Scope<()>) -> Element {
         render!(rsx! {
@@ -364,7 +458,7 @@ impl CardList {
                 None,
             ),
         );
-        while list.data.len() < 4 {
+        while list.project_props.len() < 4 {
             list.push(cx, ProjectProps::default());
         }
         list
