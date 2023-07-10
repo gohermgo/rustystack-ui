@@ -1,7 +1,7 @@
 #![allow(non_snake_case)]
 // use core::num::fmt::Formatted;
 
-use std::fmt::Display;
+use std::fmt::{Display, Write};
 
 use dioxus::prelude::*;
 
@@ -117,7 +117,7 @@ struct GitLink {
 
 // impl PartialEq for GitLink {
 //     fn eq(&self, other: &Self) -> bool {
-//         self.user.eq(&other.user) && self.repo.eq(&other.repo) 
+//         self.user.eq(&other.user) && self.repo.eq(&other.repo)
 //     }
 //     fn ne(&self, other: &Self) -> bool {
 //         self.user.ne(&other.user) || self.repo.ne(&other.repo)
@@ -150,9 +150,15 @@ impl Url for GitLink {
     }
 }
 
+impl std::fmt::Write for GitLink {
+    fn write_str(mut self: &mut Self, args: std::fmt::Arguments<'_>) -> std::fmt::Result {
+        String::from(self).write_str(args)
+    }
+}
+
 impl std::fmt::Display for GitLink {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", String::from(*self))
+        self.write_str(f)
     }
 }
 
@@ -169,7 +175,7 @@ impl std::fmt::Display for GitLink {
 // }
 
 fn git_link(cx: Scope<GitLink>) -> Element {
-    render!(rsx ! {
+    render!(rsx! {
         a {
             href: "{cx.props.get_url()}",
             class: "right floated created",
@@ -185,14 +191,36 @@ enum CardCategory {
     Academic,
 }
 
+impl std::convert::From<CardCategory> for String {
+    fn from(value: CardCategory) -> Self {
+        match value {
+            CardCategory::Freetime => String::from("freetime"),
+            CardCategory::Professional => String::from("professional"),
+            CardCategory::Academic => String::from("academic"),
+        }
+    }
+}
+
+impl std::fmt::Write for CardCategory {
+    fn write_str(&mut self, s: &str) -> std::fmt::Result {
+        String::from(*self).write_str(s)
+    }
+}
+
+impl std::fmt::Display for CardCategory {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.write_str(f)
+    }
+}
+
 #[derive(Clone, PartialEq, Props)]
 struct Image {
     #[props(default = String::from("https://www.placehold.co/400"))]
-    source_url: String
+    source_url: String,
 }
 
 fn image_interaction_button(cx: Scope) -> Element {
-    render!(rsx ! {
+    render!(rsx! {
         div {
             class: "ui blurring inverted dimmer transition hidden",
             div {
@@ -209,34 +237,36 @@ fn image_interaction_button(cx: Scope) -> Element {
     })
 }
 
-fn project_image(cx: Scope<Image>) -> Element {
-    render!(rsx ! {
+#[inline_props]
+fn project_image(cx: Scope, image_url: String) -> Element {
+    render!(rsx! {
         div {
             class: "image dimmable",
             image_interaction_button {},
             img {
                 alt: "card image broken",
-                src: "{cx.props.source_url}"
+                src: "{image_url}"
             }
         }
     })
 }
 
-#[derive(Clone, PartialEq, Props)]
-struct ContentProps {
-    #[props(default = String::from("blank title"), into)]
-    title: String,
-    #[props(default = String::from("blank description"), into)]
-    content: String
-}
+// #[derive(Clone, PartialEq, Props)]
+// struct ContentProps {
+//     #[props(default = String::from("blank title"), into)]
+//     title: String,
+//     #[props(default = String::from("blank description"), into)]
+//     content: String
+// }
 
-fn project_content(cx: Scope<ContentProps>) -> Element {
-    render!(rsx ! {
+#[inline_props]
+fn project_content(cx: Scope, title: String, description: String) -> Element {
+    render!(rsx! {
         div {
             class: "content",
             div {
                 class: "header",
-                "{cx.props.title}"
+                "{title}"
             }
             div {
                 class: "meta",
@@ -247,7 +277,7 @@ fn project_content(cx: Scope<ContentProps>) -> Element {
             }
             div {
                 class: "description",
-                "{cx.props.description}"
+                "{description}"
             }
         }
     })
@@ -255,14 +285,17 @@ fn project_content(cx: Scope<ContentProps>) -> Element {
 
 #[derive(Clone, PartialEq, Props)]
 struct ProjectProps {
-    content: ContentProps,
+    #[props(default = String::from("blank title"))]
+    title: String,
+    #[props(default = String::from("blank description"))]
+    description: String,
     #[props(default = None)]
     category: Option<CardCategory>,
     #[props(default = None)]
     git: Option<GitLink>,
-    image: Image,
+    #[props(default = String::from("https://www.placehold.co/400"))]
+    image_url: String,
 }
-
 
 fn project_extra_content(cx: Scope<ProjectProps>) -> Element {
     match cx.props.git {
@@ -292,14 +325,13 @@ fn render_project_card(cx: Scope<ProjectProps>) -> Element {
         div {
             class: "ui card",
             project_image {
-                cx.props.image
+                image_url: cx.props.image_url,
             },
             project_content {
-                cx.props.content
+                title: cx.props.title,
+                description: cx.props.description
             },
-            project_extra_content {
-                cx.props
-            }
+            project_extra_content {}
         }
     })
 }
@@ -310,73 +342,79 @@ fn render_project_card(cx: Scope<ProjectProps>) -> Element {
 //     }
 // }
 
-#[derive(Props)]
+impl Clone for Vec<ProjectProps> {
+    fn clone(&self) -> Self {
+        self.into_iter().map(|x| x.clone()).collect()
+    }
+}
+
+#[derive(Clone, PartialEq, Props)]
 struct CardList {
     #[props(default = None)]
     pub active_category: Option<CardCategory>,
-    #[props(default = vec![])]
-    pub project_props: Vec<Scope<'static, ProjectProps>>,
+    #[props(default = vec![ProjectProps::builder().build()])]
+    pub project_props: Vec<ProjectProps>,
 }
 
-impl PartialEq for CardList {
-    fn eq(&self, other: &Self) -> bool {
-        match self.project_props.len() == other.project_props.len() {
-            true => self
-                .project_props
-                .iter()
-                .enumerate()
-                .all(|(idx, val)| other.project_props[idx].props.eq(val.props)),
-            false => false,
-        }
-    }
-    fn ne(&self, other: &Self) -> bool {
-        match self.project_props.len() == other.project_props.len() {
-            true => self
-                .project_props
-                .iter()
-                .enumerate()
-                .any(|(idx, val)| other.project_props[idx].props.ne(val.props)),
-            false => true,
-        }
-    }
-}
+// impl PartialEq for CardList {
+//     fn eq(&self, other: &Self) -> bool {
+//         match self.project_props.len() == other.project_props.len() {
+//             true => self
+//                 .project_props
+//                 .iter()
+//                 .enumerate()
+//                 .all(|(idx, val)| other.project_props[idx].props.eq(val.props)),
+//             false => false,
+//         }
+//     }
+//     fn ne(&self, other: &Self) -> bool {
+//         match self.project_props.len() == other.project_props.len() {
+//             true => self
+//                 .project_props
+//                 .iter()
+//                 .enumerate()
+//                 .any(|(idx, val)| other.project_props[idx].props.ne(val.props)),
+//             false => true,
+//         }
+//     }
+// }
 
-impl Clone for CardList {
-    fn clone(&self) -> Self {
-        let mut clone_data = Vec::with_capacity(self.project_props.len());
-        clone_data.clone_from_slice(&self.project_props);
-        Self {
-            active_category: self.active_category,
-            project_props: clone_data,
-        }
-    }
-}
+// impl Clone for CardList {
+//     fn clone(&self) -> Self {
+//         let mut clone_data = Vec::with_capacity(self.project_props.len());
+//         clone_data.clone_from_slice(&self.project_props);
+//         Self {
+//             active_category: self.active_category,
+//             project_props: clone_data,
+//         }
+//     }
+// }
 
-trait Renderable {
-    fn render_function(&self) -> F
-    where
-        F: std::convert::Into<Element>;
-    fn render(&self, cx: Scope<()>) -> Element;
-}
+// trait Renderable {
+//     fn render_function(&self) -> F
+//     where
+//         F: std::convert::Into<Element>;
+//     fn render(&self, cx: Scope<()>) -> Element;
+// }
 
-impl RenderBlock for T {
-    fn render(&self) -> F where F: std::convert::Into<Element>,
-    {
-        |
-    }
-|} 
-impl RenderBlock for CardList {
-    fn render_function(&self) -> F
-    where
-        F: std::convert::Into<Element>,
-    {
-    }
-    fn render(&self, cx: Scope<()>) -> Element {
-        render!(rsx! {
-            self.project_props
-        })
-    }
-}
+// impl RenderBlock for T {
+//     fn render(&self) -> F where F: std::convert::Into<Element>,
+//     {
+//         |
+//     }
+// |}
+// impl RenderBlock for CardList {
+//     fn render_function(&self) -> F
+//     where
+//         F: std::convert::Into<Element>,
+//     {
+//     }
+//     fn render(&self, cx: Scope<()>) -> Element {
+//         render!(rsx! {
+//             self.project_props
+//         })
+//     }
+// }
 
 #[derive(PartialEq, Props)]
 struct ProjectFilterProps {}
