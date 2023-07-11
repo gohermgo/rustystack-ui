@@ -100,7 +100,6 @@ trait Url {
 trait RenderBlock<P> {
     fn render(cx: Scope<P>) -> Element;
 }
-
 #[derive(Clone, Default, PartialEq, Props)]
 struct GitLink {
     user: String,
@@ -143,7 +142,6 @@ impl std::convert::From<GitLink> for String {
 //         format!("https://www.github.com/{}/{}.git", *value.user, *value.repo)
 //     }
 // }
-
 impl Url for GitLink {
     fn get_url(&self) -> String {
         String::from(*self)
