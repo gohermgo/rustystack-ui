@@ -4,6 +4,7 @@
 use std::fmt::{Display, Write};
 
 use dioxus::prelude::*;
+use rustystack_common::*;
 
 fn main() {
     dioxus_web::launch(app);
@@ -107,6 +108,12 @@ struct GitLink {
     repo: String,
 }
 
+impl std::string::ToString for GitLink {
+    fn to_string(&self) -> String {
+        format!("https://www.github.com/{}/{}.git", self.user, self.repo)
+    }
+}
+
 // impl Copy for GitLink {}
 
 // impl Clone for GitLink {
@@ -132,11 +139,23 @@ struct GitLink {
 //     }
 // }
 
-impl std::convert::From<GitLink> for String {
-    fn from(value: GitLink) -> Self {
-        format!("https://www.github.com/{}/{}.git", value.user, value.repo)
-    }
-}
+// impl std::string::ToString for GitLink {
+//     fn to_string(&self) -> String {
+//         String::from(self)
+//     }
+// }
+
+// impl std::convert::From<GitLink> for String {
+//     fn from(value: GitLink) -> Self {
+//         format!("https://www.github.com/{}/{}.git", value.user, value.repo)
+//     }
+// }
+
+// impl Url for GitLink {
+//     fn get_url(&self) -> String {
+//         String::from(*self)
+//     }
+// }
 
 // impl std::convert::From<&GitLink> for String {
 //     fn from(value: &GitLink) -> Self {
@@ -144,23 +163,18 @@ impl std::convert::From<GitLink> for String {
 //     }
 // }
 
-impl Url for GitLink {
-    fn get_url(&self) -> String {
-        String::from(*self)
-    }
-}
+// impl std::fmt::Write for GitLink {
+//     fn write_str(mut self: &mut Self, args: std::fmt::Arguments<'_>) -> std::fmt::Result {
+//         String::from(self).write_str(args)
+//     }
+// }
 
-impl std::fmt::Write for GitLink {
-    fn write_str(mut self: &mut Self, args: std::fmt::Arguments<'_>) -> std::fmt::Result {
-        String::from(self).write_str(args)
-    }
-}
-
-impl std::fmt::Display for GitLink {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        self.write_str(f)
-    }
-}
+// impl std::fmt::Display for GitLink {
+//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+//         String::from(self).write_str(f)
+//         // self.write_str(f)
+//     }
+// }
 
 // impl RenderBlock<GitLink> for GitLink {
 //     fn render(cx: Scope<) -> Element {
@@ -174,10 +188,10 @@ impl std::fmt::Display for GitLink {
 //     }
 // }
 
-fn git_link(cx: Scope<GitLink>) -> Element {
+fn git_element(cx: Scope<GitLink>) -> Element {
     render!(rsx! {
         a {
-            href: "{cx.props.get_url()}",
+            href: "{cx.props.to_string()}",
             class: "right floated created",
             "git"
         }
@@ -201,17 +215,17 @@ impl std::convert::From<CardCategory> for String {
     }
 }
 
-impl std::fmt::Write for CardCategory {
-    fn write_str(&mut self, s: &str) -> std::fmt::Result {
-        String::from(*self).write_str(s)
-    }
-}
+// impl std::fmt::Write for CardCategory {
+//     fn write_str(&mut self, s: &str) -> std::fmt::Result {
+//         String::from(*self).write_str()
+//     }
+// }
 
-impl std::fmt::Display for CardCategory {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        self.write_str(f)
-    }
-}
+// impl std::fmt::Display for CardCategory {
+//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+//         self.write_str()
+//     }
+// }
 
 #[derive(Clone, PartialEq, Props)]
 struct Image {
@@ -296,15 +310,14 @@ struct ProjectProps {
     #[props(default = String::from("https://www.placehold.co/400"))]
     image_url: String,
 }
-
 fn project_extra_content(cx: Scope<ProjectProps>) -> Element {
     match cx.props.git {
-        Some(gitlink) => render!(rsx! {
+        Some(git) => render!(rsx! {
             div {
                 class: "extra content",
-                git_link {
-                    user: gitlink.user,
-                    repo: gitlink.repo,
+                git_element {
+                    user: git.user,
+                    repo: git.repo,
                 },
             }
         }),
@@ -342,11 +355,11 @@ fn render_project_card(cx: Scope<ProjectProps>) -> Element {
 //     }
 // }
 
-impl Clone for Vec<ProjectProps> {
-    fn clone(&self) -> Self {
-        self.into_iter().map(|x| x.clone()).collect()
-    }
-}
+// impl Clone for Vec<ProjectProps> {
+//     fn clone(&self) -> Self {
+//         self.into_iter().map(|x| x.clone()).collect()
+//     }
+// }
 
 #[derive(Clone, PartialEq, Props)]
 struct CardList {
@@ -354,6 +367,26 @@ struct CardList {
     pub active_category: Option<CardCategory>,
     #[props(default = vec![ProjectProps::builder().build()])]
     pub project_props: Vec<ProjectProps>,
+}
+
+#[derive(PartialEq, Props)]
+struct FilterState {
+    #[props(default = None)]
+    pub active_category: Option<CardCategory>
+}
+
+fn _render_active_cards(cx: Scope<(FilterState, Vec<ProjectProps>)>) -> Element {
+    cx.props.1.into_iter().filter(|project| {
+        project.category == cx.props.0.active_category
+    }).map(|active_project| {
+        render!( rsx ! {
+            render_project_card {               
+                title: active_project.title,
+                description: active_project.description,
+                image_url: active_project.image_url
+            }        
+        })
+    })
 }
 
 // impl PartialEq for CardList {
@@ -420,20 +453,22 @@ struct CardList {
 struct ProjectFilterProps {}
 
 fn get_active_cards(cx: Scope<(CardList, CardCategory)>) -> Vec<CardList> {
-    cx.props
+    cx
+        .props
         .0
         .project_props
         .into_iter()
-        .filter_map(|f| match Some(cx.props.1) == f.props.category {
-            true => Some(cx.props.0),
+        .filter_map(|props| match props.category {
+            Some(c) => todo!(),
             _ => None,
         })
-        .collect()
+        .collect();
 }
 
 fn render_active_cards(cx: Scope<CardList>) -> Element {
+    let active_cards = 
     render!(rsx! {
-        let active_cards = get_active_cards(cx);
+        let active_cards = get_active_cards
 
         match cx.props.active_category {
             Some(category) => cx.props.project_props.data.for_each(|prop| {
